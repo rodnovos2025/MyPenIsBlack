@@ -24,7 +24,6 @@
         canvas {
             border: 2px solid #333;
             touch-action: none;
-            overflow: auto;
             cursor: crosshair;
             display: block;
             width: 100%;
@@ -38,7 +37,6 @@
             transform: translateX(-50%);
             display: flex;
             gap: 15px;
-            flex-direction: row;
             z-index: 10;
         }
 
@@ -47,8 +45,6 @@
             border: none;
             color: white;
             padding: 20px;
-            text-align: center;
-            text-decoration: none;
             font-size: 18px;
             border-radius: 50%;
             cursor: pointer;
@@ -69,49 +65,19 @@
             transform: scale(1);
         }
 
-        /* Стиль для кнопки стирания */
-        #erase {
-            background-color: #f44336;
-        }
+        #erase { background-color: #f44336; }
+        #erase:hover { background-color: #e53935; }
 
-        #erase:hover {
-            background-color: #e53935;
-        }
+        #save { background-color: #008CBA; }
+        #save:hover { background-color: #007bb5; }
 
-        /* Стиль для кнопки сохранения */
-        #save {
-            background-color: #008CBA;
-        }
+        #colorPicker { background-color: #000000; }
+        #colorPicker:hover { background-color: #444444; }
 
-        #save:hover {
-            background-color: #007bb5;
-        }
+        #clear { background-color: #ff9800; }
+        #clear:hover { background-color: #fb8c00; }
 
-        /* Стиль для кнопки выбора цвета */
-        #colorPicker {
-            background-color: #000000;
-        }
-
-        #colorPicker:hover {
-            background-color: #444444;
-        }
-
-        /* Стиль для кнопки очистки всего */
-        #clear {
-            background-color: #ff9800;
-        }
-
-        #clear:hover {
-            background-color: #fb8c00;
-        }
-
-        /* Стиль для значка выбора цвета */
-        .fas.fa-palette {
-            font-size: 24px;
-        }
-
-        /* Стиль для значка рисования */
-        .fas.fa-pencil-alt {
+        .fas.fa-palette, .fas.fa-pencil-alt {
             font-size: 24px;
         }
 
@@ -142,19 +108,16 @@
         
         let drawing = false;
         let eraseMode = false;
-        let color = '#000000';  // Начальный цвет
-        let drawingMode = true; // Режим рисования активен при открытии
+        let color = '#000000';  
+        let drawingMode = true;
 
-        // Устанавливаем размер холста
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
 
-        // Настройки для рисования
-        ctx.lineWidth = 12;  // Толщина линии
+        ctx.lineWidth = 12;  
         ctx.lineCap = 'round';
         ctx.strokeStyle = color;
 
-        // Обработчики событий для рисования
         canvas.addEventListener('touchstart', startDrawing);
         canvas.addEventListener('touchmove', draw);
         canvas.addEventListener('touchend', stopDrawing);
@@ -165,7 +128,7 @@
 
         function startDrawing(e) {
             e.preventDefault();
-            if (!drawingMode) return; // Если не рисуем, не начинаем рисовать
+            if (!drawingMode) return;
             drawing = true;
             const x = e.touches ? e.touches[0].clientX - canvas.offsetLeft : e.offsetX;
             const y = e.touches ? e.touches[0].clientY - canvas.offsetTop : e.offsetY;
@@ -174,12 +137,12 @@
         }
 
         function draw(e) {
-            if (!drawing || !drawingMode) return; // Если не рисуем, не продолжаем рисовать
+            if (!drawing || !drawingMode) return;
             e.preventDefault();
             const x = e.touches ? e.touches[0].clientX - canvas.offsetLeft : e.offsetX;
             const y = e.touches ? e.touches[0].clientY - canvas.offsetTop : e.offsetY;
             if (eraseMode) {
-                ctx.clearRect(x - ctx.lineWidth / 2, y - ctx.lineWidth / 2, ctx.lineWidth * 2, ctx.lineWidth * 2);  // Стирание будет толстым
+                ctx.clearRect(x - ctx.lineWidth / 2, y - ctx.lineWidth / 2, ctx.lineWidth * 2, ctx.lineWidth * 2);
             } else {
                 ctx.lineTo(x, y);
                 ctx.stroke();
@@ -190,37 +153,43 @@
             drawing = false;
         }
 
-        // Стереть все
         clearButton.addEventListener('click', () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
 
-        // Стереть или рисовать
         eraseButton.addEventListener('click', () => {
             eraseMode = !eraseMode;
             ctx.strokeStyle = eraseMode ? 'white' : color;
-            ctx.lineWidth = eraseMode ? 40 : 12;  // Увеличиваем толщину для стирания
+            ctx.lineWidth = eraseMode ? 40 : 12;
         });
 
-        // Сохранить изображение
         saveButton.addEventListener('click', () => {
-            const dataUrl = canvas.toDataURL();
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+
+            tempCtx.fillStyle = 'white';
+            tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+            tempCtx.drawImage(canvas, 0, 0);
+
+            const dataUrl = tempCanvas.toDataURL('image/png');
             const a = document.createElement('a');
             a.href = dataUrl;
             a.download = 'drawing.png';
             a.click();
         });
 
-        // Выбор цвета через всплывающее окно
         colorPickerButton.addEventListener('click', () => {
-            const color = prompt("Введите название цвета (например, 'red', 'blue', 'green'):");
-            if (color) {
-                ctx.strokeStyle = color;
-                document.getElementById('colorWheel').value = color;
+            const userColor = prompt("Введите название цвета (например, 'red', 'blue', 'green'):");
+            if (userColor) {
+                ctx.strokeStyle = userColor;
+                color = userColor;
             }
         });
 
-        // Режим рисования
         drawButton.addEventListener('click', () => {
             drawingMode = true;
             eraseMode = false;
